@@ -1,0 +1,20 @@
+{
+  "name": "Sudo Academy",
+  "short_name": "Sudo",
+  "start_url": "index.html",
+  "display": "standalone",
+  "background_color": "#050505",
+  "theme_color": "#bc13fe",
+  "icons": [
+    {
+      "src": "Gemini_Generated_Image_5g17n05g17n05g17.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "Gemini_Generated_Image_5g17n05g17n05g17.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

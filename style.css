@@ -1,0 +1,76 @@
+:root {
+    --primary: #00ff41;
+    --neon-blue: #00d4ff;
+    --bg: #0b0e11;
+    --card: #1a1d21;
+    --text: #e1e1e1;
+}
+
+* { box-sizing: border-box; }
+
+body {
+    background: var(--bg); color: var(--text); font-family: 'Cairo', sans-serif;
+    margin: 0; direction: rtl; overflow-x: hidden;
+}
+
+/* الاسم المنور المتحرك */
+.neon-text {
+    font-family: 'Orbitron', sans-serif;
+    font-size: clamp(2rem, 10vw, 4.5rem);
+    color: #fff;
+    text-shadow: 0 0 5px #fff, 0 0 20px var(--primary), 0 0 40px var(--primary);
+    animation: glowMove 3s ease-in-out infinite alternate;
+}
+
+@keyframes glowMove {
+    from { text-shadow: 0 0 5px #fff, 0 0 20px var(--primary), 0 0 40px var(--primary); }
+    to { text-shadow: 0 0 10px #fff, 0 0 30px var(--neon-blue), 0 0 60px var(--neon-blue); transform: scale(1.05); }
+}
+
+nav {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 15px 5%; background: var(--card); border-bottom: 2px solid var(--primary);
+    position: sticky; top: 0; z-index: 1000;
+}
+
+.logo-container { display: flex; flex-direction: column; }
+.logo { font-size: 1.5rem; font-weight: bold; color: var(--primary); }
+.owner-tag { font-size: 0.75rem; color: var(--neon-blue); font-family: 'Orbitron'; letter-spacing: 1px; }
+
+.hero { text-align: center; padding: 120px 20px; background: radial-gradient(circle, #1a1d21 0%, #0b0e11 100%); }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 30px; padding: 40px 5%; }
+
+.card {
+    background: var(--card); border-radius: 20px; padding: 25px;
+    border: 1px solid #333; transition: 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.card:hover { transform: translateY(-12px); border-color: var(--primary); box-shadow: 0 10px 30px rgba(0, 255, 65, 0.15); }
+
+iframe { width: 100%; height: 220px; border-radius: 12px; border: none; background: #000; }
+
+.video-list { max-height: 180px; overflow-y: auto; margin-top: 15px; border-top: 1px solid #333; padding-top: 10px; }
+.video-item {
+    background: #0b0e11; padding: 12px; margin: 8px 0; border-radius: 8px;
+    cursor: pointer; border-right: 4px solid var(--primary); font-size: 0.95rem; transition: 0.2s;
+}
+.video-item:hover { background: #1e2227; padding-right: 20px; }
+
+.wa-btn {
+    display: block; background: #25d366; color: white; text-align: center;
+    padding: 14px; border-radius: 10px; text-decoration: none; font-weight: bold; margin-top: 15px;
+}
+
+.btn-main { background: var(--primary); color: black; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+.btn-outline { background: none; border: 1px dashed var(--primary); color: var(--primary); padding: 12px; cursor: pointer; width: 100%; margin: 10px 0; border-radius: 8px; }
+
+/* Admin Grid */
+.admin-dashboard { padding: 40px 5%; }
+.admin-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 25px; }
+.admin-card { background: var(--card); padding: 30px; border-radius: 15px; border: 1px solid #444; }
+input, select { width: 100%; padding: 14px; margin: 10px 0; background: #0b0e11; border: 1px solid #444; color: white; border-radius: 8px; font-family: 'Cairo'; }
+.full-w { width: 100%; }
+.manage-item { display: flex; justify-content: space-between; padding: 15px; background: #0b0e11; margin-bottom: 12px; border-radius: 10px; align-items: center; border: 1px solid #222; }
+
+@media (max-width: 768px) { .admin-grid { grid-template-columns: 1fr; } .neon-text { font-size: 2.5rem; } }
