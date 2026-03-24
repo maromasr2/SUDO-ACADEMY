@@ -1,64 +1,37 @@
-<!DOCTYPE html>
-<html lang="ar" dir="rtl">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudo Admin | Management</title>
-    <link rel="stylesheet" href="style.css">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-</head>
-<body class="admin-body">
-    <div class="admin-dashboard">
-        <header class="admin-header">
-            <h1 class="neon-text-small">ADMIN DASHBOARD</h1>
-            <a href="index.html" class="back-link">العودة للموقع ←</a>
-        </header>
+<section class="admin-card full-width">
+    <h3>📊 إحصائيات جيش سودو</h3>
+    <p>إجمالي المسجلين: <span id="total-users-count" style="color:var(--primary); font-weight:bold;">0</span></p>
+    
+    <table style="width:100%; border-collapse: collapse; margin-top:20px;">
+        <thead>
+            <tr style="border-bottom:1px solid var(--primary);">
+                <th>الاسم</th>
+                <th>الإيميل</th>
+                <th>التواصل</th>
+            </tr>
+        </thead>
+        <tbody id="users-list-table"></tbody>
+    </table>
+</section>
 
-        <div class="admin-grid">
-            <section class="admin-card">
-                <h3>➕ إضافة كورس جديد</h3>
-                <input type="text" id="courseTitle" placeholder="عنوان الكورس">
-                <select id="courseType">
-                    <option value="free">مجاني</option>
-                    <option value="paid">مدفوع</option>
-                </select>
-                <div id="videos-inputs">
-                    <input type="text" class="video-url" placeholder="لينك يوتيوب (Embed أو Watch)">
-                </div>
-                <button onclick="addNewVideoInput()" class="btn-outline">+ إضافة درس آخر</button>
-                <button onclick="saveCourse()" class="btn-main full-w">نشر الكورس</button>
-            </section>
-
-            <section class="admin-card">
-                <h3>👥 إدارة المستخدمين</h3>
-                <div class="input-group">
-                    <label>تفعيل كورس لطالب:</label>
-                    <input type="email" id="studentEmail" placeholder="إيميل الطالب">
-                    <select id="courseSelect"></select>
-                    <button onclick="activateAccess()" class="btn-main full-w">تفعيل الوصول</button>
-                </div>
-                <hr style="margin:20px 0; border:0; border-top:1px solid #444;">
-                <div class="input-group">
-                    <label>تعيين رتبة أدمن:</label>
-                    <input type="email" id="userEmailRole" placeholder="إيميل الشخص">
-                    <select id="roleSelect">
-                        <option value="user">مستخدم عادي</option>
-                        <option value="admin">أدمن (مدير)</option>
-                    </select>
-                    <button onclick="changeUserRole()" class="btn-main full-w" style="background:#00d4ff">تحديث الرتبة</button>
-                </div>
-            </section>
-        </div>
-
-        <section class="admin-card full-width">
-            <h3>📂 إدارة الكورسات الحالية</h3>
-            <div id="manage-courses-list"></div>
-        </section>
-    </div>
-
-    <script src="config.js"></script>
-    <script src="admin.js"></script>
-</body>
-</html>
+<script>
+    // تحديث الإحصائيات (توضع داخل سكريبت admin.js أو admin.html)
+    async function loadStats() {
+        const snapshot = await db.collection("users_profiles").get();
+        document.getElementById('total-users-count').innerText = snapshot.size;
+        
+        const table = document.getElementById('users-list-table');
+        table.innerHTML = "";
+        snapshot.forEach(doc => {
+            const user = doc.data();
+            const waLink = user.phone ? `https://wa.me/${user.phone.replace('+', '')}` : "#";
+            table.innerHTML += `
+                <tr style="border-bottom:1px solid #333;">
+                    <td>${user.name || 'غير معروف'}</td>
+                    <td>${user.email}</td>
+                    <td><a href="${waLink}" target="_blank" class="btn-main" style="padding:5px 10px; font-size:12px; background:#25d366;">WhatsApp</a></td>
+                </tr>`;
+        });
+    }
+    loadStats();
+</script>
