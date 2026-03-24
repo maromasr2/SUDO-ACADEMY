@@ -3,41 +3,125 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Account Information | Sudo Academy</title>
+    <title>Sudo Academy | الملف الشخصي</title>
     <link rel="stylesheet" href="style.css">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
-<body>
+<body style="background: var(--bg); color: var(--text);">
+
     <nav>
         <div class="logo-container" onclick="window.location.href='index.html'" style="cursor:pointer;">
             <span class="logo">Sudo Academy</span>
         </div>
-        <a href="index.html" style="color:white; text-decoration:none;">العودة للهوم ←</a>
+        <a href="index.html" style="color:white; text-decoration:none; font-weight: bold;">العودة للهوم ←</a>
     </nav>
 
-    <div class="container" style="max-width: 500px; margin-top: 50px;">
-        <div class="admin-card">
-            <h2 style="color:var(--primary); font-family:'Orbitron'; text-align:center;">ACCOUNT INFO</h2>
-            <div class="input-group">
-                <label>الاسم الكامل:</label>
-                <input type="text" id="updateName" placeholder="اسمك الثلاثي">
+    <div class="container" style="max-width: 550px; margin: 60px auto; padding: 0 20px;">
+        <div class="admin-card" style="border: 1px solid var(--primary); box-shadow: 0 0 20px rgba(0, 255, 65, 0.1);">
+            <h2 style="color:var(--primary); font-family:'Orbitron'; text-align:center; margin-bottom: 30px; letter-spacing: 2px;">
+                SOLDIER PROFILE
+            </h2>
+            
+            <div id="loading-profile" style="text-align:center; color: var(--primary);">جاري تحميل بياناتك...</div>
+
+            <div id="profile-form" style="display:none;">
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom: 8px; color: #aaa;">الاسم الكامل:</label>
+                    <input type="text" id="updateName" placeholder="اسمك الثلاثي كما يظهر للجميع" 
+                           style="width:100%; padding:12px; background:#0b0e11; border:1px solid #333; color:white; border-radius:8px;">
+                </div>
+
+                <div class="input-group" style="margin-bottom: 20px;">
+                    <label style="display:block; margin-bottom: 8px; color: #aaa;">السن:</label>
+                    <input type="number" id="updateAge" placeholder="عمرك الحالي" 
+                           style="width:100%; padding:12px; background:#0b0e11; border:1px solid #333; color:white; border-radius:8px;">
+                </div>
+
+                <div class="input-group" style="margin-bottom: 30px;">
+                    <label style="display:block; margin-bottom: 8px; color: #aaa;">رقم الواتساب:</label>
+                    <input type="text" id="updatePhone" placeholder="مثال: 201515227612" 
+                           style="width:100%; padding:12px; background:#0b0e11; border:1px solid #333; color:white; border-radius:8px;">
+                </div>
+
+                <button onclick="saveProfileData()" class="btn-main" style="width: 100%; padding: 15px; font-size: 1.1rem;">
+                    حفظ التغييرات في القاعدة 🛡️
+                </button>
+                
+                <p id="save-status" style="text-align:center; margin-top:15px; font-size:14px; display:none;"></p>
             </div>
-            <div class="input-group">
-                <label>السن:</label>
-                <input type="number" id="updateAge" placeholder="عمرك">
-            </div>
-            <div class="input-group">
-                <label>رقم الواتساب:</label>
-                <input type="text" id="updatePhone" placeholder="بمفتاح الدولة (مثال: 20155...)">
-            </div>
-            <button onclick="updateProfile()" class="btn-main" style="width:100%; margin-top:20px;">تحديث البيانات ✅</button>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script src="app.js"></script>
+
+    <script>
+        // دالة تحميل البيانات مدمجة هنا لضمان السرعة
+        firebase.auth().onAuthStateChanged(async (user) => {
+            if (user) {
+                document.getElementById('loading-profile').style.display = 'none';
+                document.getElementById('profile-form').style.display = 'block';
+                
+                // 1. تعبئة الاسم من حساب جوجل بشكل مبدئي
+                document.getElementById('updateName').value = user.displayName || "";
+                
+                // 2. محاولة جلب باقي البيانات من Firestore
+                try {
+                    const profDoc = await db.collection("users_profiles").doc(user.email).get();
+                    if(profDoc.exists) {
+                        const data = profDoc.data();
+                        if(data.name) document.getElementById('updateName').value = data.name;
+                        if(data.age) document.getElementById('updateAge').value = data.age;
+                        if(data.phone) document.getElementById('updatePhone').value = data.phone;
+                    }
+                } catch(e) { console.error("Error fetching profile:", e); }
+            } else {
+                // لو مش مسجل دخول يرجعه للهوم
+                window.location.href = "index.html";
+            }
+        });
+
+        // دالة الحفظ
+        async function saveProfileData() {
+            const user = firebase.auth().currentUser;
+            const status = document.getElementById('save-status');
+            
+            const name = document.getElementById('updateName').value.trim();
+            const age = document.getElementById('updateAge').value.trim();
+            const phone = document.getElementById('updatePhone').value.trim();
+
+            if(!name) { alert("من فضلك اكتب اسمك!"); return; }
+
+            try {
+                status.style.display = "block";
+                status.style.color = "var(--primary)";
+                status.innerText = "جاري الحفظ في النظام...";
+
+                // تحديث الاسم في Firebase Auth
+                await user.updateProfile({ displayName: name });
+
+                // تحديث البيانات في Firestore
+                await db.collection("users_profiles").doc(user.email).set({
+                    name: name,
+                    age: age,
+                    phone: phone,
+                    email: user.email,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                }, { merge: true });
+
+                status.innerText = "✅ تمت العملية بنجاح! سيتم تحديث الصفحة.";
+                setTimeout(() => location.reload(), 1500);
+
+            } catch(error) {
+                status.style.color = "#ff4444";
+                status.innerText = "❌ خطأ في الحفظ: " + error.message;
+            }
+        }
+    </script>
+
 </body>
 </html>
