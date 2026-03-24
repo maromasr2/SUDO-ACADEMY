@@ -2,61 +2,92 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
-    <title>Profile | Sudo Academy</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>الملف الشخصي | Sudo Academy</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
-<body>
-    <div class="container" style="max-width:500px; margin-top:50px;">
-        <div class="admin-card">
-            <h2 class="neon-text-small">البيانات الشخصية</h2>
-            
-            <label>البريد الإلكتروني (محمي):</label>
-            <input type="text" id="userEmail" disabled style="background:#222; color:#888;">
+<body style="background:var(--bg); color:white; padding:20px;">
 
-            <label>الاسم الكامل:</label>
-            <input type="text" id="updateName">
+    <nav style="display:flex; justify-content:space-between; align-items:center; padding:15px; background:rgba(0,0,0,0.5); border-radius:10px; margin-bottom:30px;">
+        <div class="logo" style="font-family:'Orbitron'; color:var(--primary); font-weight:bold;">SUDO PROFILE</div>
+        <a href="index.html" class="btn-main" style="text-decoration:none; background:#222; font-size:14px; padding:8px 15px;">🏠 العودة للرئيسية</a>
+    </nav>
 
-            <label>رقم الهاتف (لا يمكن تغييره بعد الحفظ):</label>
-            <input type="text" id="updatePhone" placeholder="أدخل رقمك مع رمز الدولة">
-            
-            <button onclick="saveProfile()" class="btn-main full-w" style="margin-top:20px;">حفظ التعديلات</button>
+    <div class="admin-card" style="max-width:500px; margin:auto; border:1px solid var(--primary);">
+        <h2 class="neon-text-small" style="text-align:center;">بيانات المحارب 🛡️</h2>
+        
+        <div style="margin-top:20px;">
+            <label style="color:#888; font-size:13px;">البريد الإلكتروني (ثابت):</label>
+            <input type="text" id="prof-email" disabled style="background:#000; color:#555; width:100%; padding:12px; border-radius:8px; border:1px solid #222; margin-bottom:20px;">
+
+            <label style="color:#aaa;">الاسم الذي سيظهر في الموقع:</label>
+            <input type="text" id="prof-name" placeholder="ادخل اسمك الحقيقي" style="width:100%; padding:12px; border-radius:8px; background:#0b0e11; color:white; border:1px solid #333; margin-bottom:20px;">
+
+            <label style="color:#aaa;">رقم الواتساب (للتفعيل):</label>
+            <input type="text" id="prof-phone" placeholder="مثال: 201012345678" style="width:100%; padding:12px; border-radius:8px; background:#0b0e11; color:white; border:1px solid #333; margin-bottom:10px;">
+            <p id="phone-note" style="font-size:11px; color:var(--primary); margin-bottom:25px;">* بمجرد الحفظ، لن تستطيع تغيير رقم الهاتف لأسباب أمنية.</p>
+
+            <button onclick="saveProfile()" class="btn-main full-w" style="font-size:1.1rem; padding:15px;">حفظ وتحديث الهوية 🛡️</button>
         </div>
     </div>
 
     <script src="config.js"></script>
     <script>
         firebase.auth().onAuthStateChanged(async user => {
-            if(!user) window.location.href = 'index.html';
-            document.getElementById('userEmail').value = user.email;
+            if(!user) { window.location.href = 'index.html'; return; }
             
+            document.getElementById('prof-email').value = user.email;
+
+            // جلب البيانات من Firestore
             const doc = await db.collection("users_profiles").doc(user.email).get();
             if(doc.exists) {
-                const data = doc.data();
-                document.getElementById('updateName').value = data.name || "";
-                document.getElementById('updatePhone').value = data.phone || "";
-                if(data.phone) document.getElementById('updatePhone').disabled = true;
+                const d = doc.data();
+                document.getElementById('prof-name').value = d.name || user.displayName || "";
+                if(d.phone) {
+                    const phoneInput = document.getElementById('prof-phone');
+                    phoneInput.value = d.phone;
+                    phoneInput.disabled = true; // قفل الحقل
+                    phoneInput.style.background = "#000";
+                    phoneInput.style.color = "#666";
+                    document.getElementById('phone-note').innerText = "✅ هذا الرقم موثق في قاعدة البيانات.";
+                }
             }
         });
 
         async function saveProfile() {
             const user = firebase.auth().currentUser;
-            const phoneField = document.getElementById('updatePhone');
-            const data = {
-                name: document.getElementById('updateName').value,
-                email: user.email,
-                updatedAt: new Date()
-            };
+            const newName = document.getElementById('prof-name').value.trim();
+            const phoneInput = document.getElementById('prof-phone');
             
-            if(!phoneField.disabled) {
-                data.phone = phoneField.value;
-            }
+            if(!newName) return alert("الاسم مطلوب ليظهر في الشهادات والموقع!");
 
-            await db.collection("users_profiles").doc(user.email).set(data, { merge: true });
-            alert("تم حفظ البيانات بنجاح 🛡️");
-            location.reload();
+            try {
+                // 1. تحديث الاسم في Firebase Auth (عشان يظهر في الموقع كله)
+                await user.updateProfile({ displayName: newName });
+
+                // 2. تحديث البيانات في Firestore
+                let updateData = { 
+                    name: newName, 
+                    email: user.email,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
+                };
+
+                // لو الرقم مش مقفول (أول مرة يسجل) نحفظه
+                if(!phoneInput.disabled && phoneInput.value.trim() !== "") {
+                    updateData.phone = phoneInput.value.trim();
+                }
+
+                await db.collection("users_profiles").doc(user.email).set(updateData, { merge: true });
+                
+                alert("✅ تم تحديث بياناتك بنجاح في النظام!");
+                window.location.href = "index.html"; // يرجعه للهوم بعد الحفظ
+            } catch(e) {
+                alert("خطأ في التحديث: " + e.message);
+            }
         }
     </script>
 </body>
