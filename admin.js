@@ -1,4 +1,3 @@
-// محرك الأدمن - Sudo Academy 🛡️
 const OWNER_EMAIL = "liopliop524@gmail.com";
 let editModeId = null;
 
@@ -6,8 +5,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
     if (!user) { window.location.href = "index.html"; return; }
     const roleDoc = await db.collection("users_roles").doc(user.email).get();
     const isAdmin = (roleDoc.exists && roleDoc.data().role === 'admin') || user.email === OWNER_EMAIL;
-    if (!isAdmin) window.location.href = "index.html";
-    
+    if (!isAdmin) { alert("⛔ غير مصرح لك!"); window.location.href = "index.html"; }
     loadAdminStats();
 });
 
@@ -32,17 +30,18 @@ async function saveCourse() {
         }
     });
 
-    if(!title || videos.length === 0) return alert("اكمل البيانات يا مروان!");
+    if(!title || videos.length === 0) return alert("اكمل البيانات!");
 
     const data = { title, type, videos, updatedAt: new Date() };
 
     if(editModeId) {
         await db.collection("courses").doc(editModeId).update(data);
-        alert("✅ تم التعديل بنجاح!");
+        alert("✅ تم التعديل!");
         editModeId = null;
+        document.querySelector('.admin-card h3').innerText = "➕ إضافة كورس جديد";
     } else {
         await db.collection("courses").add({ ...data, createdAt: new Date() });
-        alert("🚀 تم النشر بنجاح!");
+        alert("🚀 تم النشر!");
     }
     location.reload();
 }
@@ -50,17 +49,17 @@ async function saveCourse() {
 function loadAdminStats() {
     const list = document.getElementById('manage-courses-list');
     const sel = document.getElementById('courseSelect');
-    db.collection("courses").onSnapshot(snap => {
+    db.collection("courses").orderBy("createdAt", "desc").onSnapshot(snap => {
         list.innerHTML = ""; sel.innerHTML = "";
         snap.forEach(doc => {
             const d = doc.data();
             sel.innerHTML += `<option value="${doc.id}">${d.title}</option>`;
             list.innerHTML += `
-                <div class="manage-item" style="display:flex; justify-content:space-between; background:#1a1d21; padding:15px; margin-bottom:10px; border-radius:10px;">
-                    <span>${d.title}</span>
+                <div class="manage-item" style="display:flex; justify-content:space-between; align-items:center; background:#1a1d21; padding:15px; margin-bottom:10px; border-radius:10px;">
+                    <span><strong>${d.title}</strong></span>
                     <div>
-                        <button onclick="prepareEdit('${doc.id}')" style="background:var(--neon-blue); border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-left:10px;">تعديل</button>
-                        <button onclick="deleteCourse('${doc.id}')" style="background:#ff4444; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">حذف</button>
+                        <button onclick="prepareEdit('${doc.id}')" style="background:var(--neon-blue); color:black; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-left:10px;">تعديل</button>
+                        <button onclick="deleteCourse('${doc.id}')" style="background:#ff4444; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">حذف</button>
                     </div>
                 </div>`;
         });
@@ -79,12 +78,12 @@ async function prepareEdit(id) {
     document.querySelector('.admin-card h3').innerText = "📝 تعديل الكورس الحالي";
 }
 
-async function deleteCourse(id) { if(confirm("حذف نهائي؟")) await db.collection("courses").doc(id).delete(); }
+async function deleteCourse(id) { if(confirm("حذف؟")) await db.collection("courses").doc(id).delete(); }
 
-// دوال تفعيل الوصول والرتب
 async function activateAccess() {
     const email = document.getElementById('studentEmail').value.trim().toLowerCase();
     const courseId = document.getElementById('courseSelect').value;
+    if(!email) return alert("الايميل!");
     await db.collection("access").doc(`${email}_${courseId}`).set({ email, courseId, date: new Date() });
     alert("✅ تم التفعيل!");
 }
