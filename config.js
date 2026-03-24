@@ -1,4 +1,3 @@
-// بيانات مشروع Sudo Academy الحقيقية
 const firebaseConfig = {
   apiKey: "AIzaSyBk4wMsyAvBzmm71IbAMS3JdvpeslQQip0",
   authDomain: "sudo-academy.firebaseapp.com",
@@ -9,6 +8,9 @@ const firebaseConfig = {
   measurementId: "G-XSVFDWVNSF"
 };
 
-// تشغيل الفيربيز بنظام الـ Compatibility عشان يقرأ من app.js و admin.js
-firebase.initializeApp(firebaseConfig);
+// تشغيل الفيربيز
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const db = firebase.firestore();
+const auth = firebase.auth();
