@@ -11,22 +11,7 @@ firebase.auth().onAuthStateChanged(async (user) => {
         const userId = user.uid;
         const deviceId = Math.random().toString(36).substring(7);
 
-        // نظام منع الدخول المتعدد (جهاز واحد فقط)
-        const sessionRef = db.collection("active_sessions").doc(userId);
-        const sessionDoc = await sessionRef.get();
-
-        if (sessionDoc.exists && sessionDoc.data().token !== localStorage.getItem('sudo_token')) {
-            alert("⚠️ تم فتح الحساب من جهاز آخر! سيتم تسجيل خروجك لحماية المحتوى.");
-            firebase.auth().signOut();
-            return;
-        }
-
-        localStorage.setItem('sudo_token', deviceId);
-        await sessionRef.set({ token: deviceId, lastActive: new Date() });
-        
-        document.getElementById('userDisplayName').innerText = user.displayName;
-        document.getElementById('loginBtn').style.display = "none";
-
+       
         // التحقق من صلاحية الأدمن لإظهار الزر
         const roleDoc = await db.collection("users_roles").doc(user.email).get();
         if (user.email === "marwan@gmail.com" || (roleDoc.exists && roleDoc.data().role === 'admin')) {
