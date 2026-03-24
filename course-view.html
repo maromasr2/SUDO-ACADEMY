@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>Sudo Academy | View Course</title>
+    <link rel="stylesheet" href="style.css">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body class="admin-body">
+    <nav style="padding:15px; background:#0a0a0a; display:flex; justify-content:space-between;">
+        <a href="index.html" style="color:var(--primary); text-decoration:none;">← العودة للميدان</a>
+        <span id="course-title-top" class="neon-text-small"></span>
+    </nav>
+
+    <div class="admin-grid" style="grid-template-columns: 3fr 1fr; padding:20px;">
+        <section class="admin-card">
+            <div id="video-container" style="position:relative; padding-top:56.25%;">
+                <iframe id="main-video" style="position:absolute; top:0; left:0; width:100%; height:100%;" allowfullscreen></iframe>
+            </div>
+            <div id="progress-bar-container" style="margin-top:20px; background:#333; height:10px; border-radius:5px;">
+                <div id="progress-fill" style="background:var(--primary); height:100%; width:0%; transition:0.3s;"></div>
+            </div>
+            <p id="video-desc" style="margin-top:15px; color:#aaa;"></p>
+        </section>
+
+        <section class="admin-card">
+            <h3>قائمة الدروس</h3>
+            <div id="video-sidebar-list"></div>
+        </section>
+    </div>
+
+    <script src="config.js"></script>
+    <script>
+        const urlParams = new URLSearchParams(window.location.search);
+        const courseId = urlParams.get('id');
+        let player;
+
+        firebase.auth().onAuthStateChanged(user => {
+            if (!user) window.location.href = 'index.html';
+            loadCourseData(user.email);
+        });
+
+        async function loadCourseData(email) {
+            const doc = await db.collection("courses").doc(courseId).get();
+            const data = doc.data();
+            document.getElementById('course-title-top').innerText = data.title;
+            
+            const list = document.getElementById('video-sidebar-list');
+            data.videos.forEach(async (v, i) => {
+                const progress = await db.collection("user_progress").doc(`${email}_${courseId}_${i}`).get();
+                const isDone = progress.exists && progress.data().completed;
+                
+                const item = document.createElement('div');
+                item.className = 'video-item';
+                item.innerHTML = `${isDone ? '✅' : '🎥'} ${v.title}`;
+                item.onclick = () => playVideo(v.url, i, data.title);
+                list.appendChild(item);
+            });
+            // تشغيل أول فيديو تلقائياً
+            if(data.videos.length > 0) playVideo(data.videos[0].url, 0);
+        }
+
+        function playVideo(url, index) {
+            document.getElementById('main-video').src = url;
+            // هنا يفضل استخدام YouTube Iframe API بدلاً من iframe عادي لضبط الـ 80% بدقة
+            // للتبسيط، سنفترض تحديث التقدم يدوياً أو عبر API
+        }
+    </script>
+</body>
+</html>
