@@ -1,37 +1,74 @@
-<section class="admin-card full-width">
-    <h3>📊 إحصائيات جيش سودو</h3>
-    <p>إجمالي المسجلين: <span id="total-users-count" style="color:var(--primary); font-weight:bold;">0</span></p>
-    
-    <table style="width:100%; border-collapse: collapse; margin-top:20px;">
-        <thead>
-            <tr style="border-bottom:1px solid var(--primary);">
-                <th>الاسم</th>
-                <th>الإيميل</th>
-                <th>التواصل</th>
-            </tr>
-        </thead>
-        <tbody id="users-list-table"></tbody>
-    </table>
-</section>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sudo Admin | VAULT-74 🛡️</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+</head>
+<body class="admin-body">
+    <div class="admin-dashboard">
+        <header class="admin-header" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:40px;">
+            <h1 class="neon-text-small">SUDO VAULT-74 🛡️</h1>
+            <a href="index.html" class="btn-main" style="text-decoration:none; background:#222;">العودة للميدان ←</a>
+        </header>
 
-<script>
-    // تحديث الإحصائيات (توضع داخل سكريبت admin.js أو admin.html)
-    async function loadStats() {
-        const snapshot = await db.collection("users_profiles").get();
-        document.getElementById('total-users-count').innerText = snapshot.size;
-        
-        const table = document.getElementById('users-list-table');
-        table.innerHTML = "";
-        snapshot.forEach(doc => {
-            const user = doc.data();
-            const waLink = user.phone ? `https://wa.me/${user.phone.replace('+', '')}` : "#";
-            table.innerHTML += `
-                <tr style="border-bottom:1px solid #333;">
-                    <td>${user.name || 'غير معروف'}</td>
-                    <td>${user.email}</td>
-                    <td><a href="${waLink}" target="_blank" class="btn-main" style="padding:5px 10px; font-size:12px; background:#25d366;">WhatsApp</a></td>
-                </tr>`;
-        });
-    }
-    loadStats();
-</script>
+        <div class="admin-grid" style="grid-template-columns: 1fr 1fr; gap:20px; margin-bottom:30px;">
+            <div class="admin-card" style="text-align:center;">
+                <p style="color:#888;">إجمالي جيش سودو 👥</p>
+                <h2 id="total-users-count" style="color:var(--primary); font-family:'Orbitron'; font-size:2.5rem;">0</h2>
+            </div>
+            <div class="admin-card" style="text-align:center;">
+                <p style="color:#888;">حالة السيرفر</p>
+                <h2 style="color:var(--neon-blue); font-family:'Orbitron';">ONLINE 🔵</h2>
+            </div>
+        </div>
+
+        <div class="admin-grid">
+            <section class="admin-card">
+                <h3 id="form-title">➕ إضافة كورس جديد</h3>
+                <input type="hidden" id="edit-course-id">
+                <div class="input-group">
+                    <input type="text" id="courseTitle" placeholder="عنوان الكورس">
+                    <select id="courseType">
+                        <option value="free">مجاني (FREE)</option>
+                        <option value="paid">مدفوع (PAID)</option>
+                    </select>
+                </div>
+                <div id="videos-inputs" style="margin-top:15px;">
+                    <label>روابط دروس اليوتيوب (Embed):</label>
+                </div>
+                <button onclick="addNewVideoInput()" class="btn-outline">+ إضافة درس جديد</button>
+                <button onclick="saveCourse()" class="btn-main full-w" style="margin-top:20px;">نشر / تحديث الكورس ✅</button>
+            </section>
+
+            <section class="admin-card">
+                <h3>👥 جيش المحاربين (تواصل سريع)</h3>
+                <div style="max-height: 400px; overflow-y: auto;">
+                    <table style="width:100%; text-align:right; border-collapse:collapse;">
+                        <thead>
+                            <tr style="color:var(--primary); border-bottom:1px solid #333;">
+                                <th style="padding:10px;">المحارب</th>
+                                <th style="padding:10px;">الواتساب</th>
+                            </tr>
+                        </thead>
+                        <tbody id="users-list-table"></tbody>
+                    </table>
+                </div>
+            </section>
+        </div>
+
+        <section class="admin-card full-width" style="margin-top:30px;">
+            <h3>📂 إدارة العمليات الحالية (الكورسات)</h3>
+            <div id="manage-courses-list" class="admin-grid" style="grid-template-columns: 1fr 1fr 1fr;"></div>
+        </section>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="admin.js"></script>
+</body>
+</html>
