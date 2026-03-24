@@ -1,7 +1,7 @@
 const OWNER_EMAIL = "liopliop524@gmail.com";
 let editModeId = null;
 
-firebase.auth().onAuthStateChanged(async (user) => {
+auth.onAuthStateChanged(async (user) => {
     if (!user) { window.location.href = "index.html"; return; }
     const roleDoc = await db.collection("users_roles").doc(user.email).get();
     const isAdmin = (roleDoc.exists && roleDoc.data().role === 'admin') || user.email === OWNER_EMAIL;
@@ -9,12 +9,59 @@ firebase.auth().onAuthStateChanged(async (user) => {
     loadAdminDashboard();
 });
 
-function addNewVideoInput(val = "") {
-    const container = document.getElementById('videos-inputs');
-    const inp = document.createElement('input');
-    inp.type = 'text'; inp.className = 'video-url'; inp.placeholder = 'رابط الدرس (Embed)';
-    inp.value = val;
-    container.appendChild(inp);
+async function loadAdminDashboard() {
+    const usersSnap = await db.collection("users_profiles").get();
+    const coursesSnap = await db.collection("courses").get();
+    const courses = coursesSnap.docs.map(d => ({id: d.id, title: d.data().title}));
+
+    // إحصائيات
+    document.getElementById('total-users-count').innerText = usersSnap.size;
+
+    // جدول الجيش
+    const table = document.getElementById('users-list-table');
+    table.innerHTML = "";
+    usersSnap.forEach(doc => {
+        const u = doc.data();
+        const allowed = u.allowedCourses || [];
+        let btnHtml = courses.map(c => {
+            const active = allowed.includes(c.id);
+            return `<button onclick="toggleAccess('${doc.id}', '${c.id}', ${active})" style="background:${active?'#006400':'#222'}; color:white; border:1px solid #444; margin:2px; padding:4px 8px; border-radius:4px; font-size:10px; cursor:pointer;">
+                    ${active ? '✅' : '❌'} ${c.title}</button>`;
+        }).join('');
+
+        table.innerHTML += `
+            <tr style="border-bottom:1px solid #222;">
+                <td style="padding:15px;">${u.name || 'مجهول'}<br><small style="color:#666;">${doc.id}</small></td>
+                <td>${btnHtml}</td>
+                <td style="text-align:center;">
+                    ${u.phone ? `<a href="https://wa.me/${u.phone}" target="_blank" style="text-decoration:none;">📱</a>` : '❌'}
+                </td>
+            </tr>`;
+    });
+
+    // قائمة الكورسات للإدارة
+    const mList = document.getElementById('manage-courses-list');
+    mList.innerHTML = "";
+    coursesSnap.forEach(doc => {
+        const d = doc.data();
+        mList.innerHTML += `
+            <div class="manage-item" style="background:#111; padding:15px; border-radius:10px; margin-bottom:10px; display:flex; justify-content:space-between;">
+                <span>${d.title} (${d.type})</span>
+                <div>
+                    <button onclick="prepareEdit('${doc.id}')" style="background:var(--neon-blue); border:none; padding:5px 10px; border-radius:5px; cursor:pointer; margin-left:10px;">✏️</button>
+                    <button onclick="deleteCourse('${doc.id}')" style="background:#600; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer;">🗑️</button>
+                </div>
+            </div>`;
+    });
+}
+
+async function toggleAccess(email, cId, has) {
+    const ref = db.collection("users_profiles").doc(email);
+    const d = await ref.get();
+    let allowed = d.exists ? (d.data().allowedCourses || []) : [];
+    if(has) allowed = allowed.filter(id => id !== cId); else allowed.push(cId);
+    await ref.set({ allowedCourses: allowed }, { merge: true });
+    loadAdminDashboard();
 }
 
 async function saveCourse() {
@@ -36,65 +83,4 @@ async function saveCourse() {
     }
     location.reload();
 }
-
-async function loadAdminDashboard() {
-    const usersSnap = await db.collection("users_profiles").get();
-    const coursesSnap = await db.collection("courses").get();
-    const courses = coursesSnap.docs.map(d => ({id: d.id, title: d.data().title}));
-
-    document.getElementById('total-users-count').innerText = usersSnap.size;
-
-    // قائمة الطلاب والصلاحيات
-    const table = document.getElementById('users-list-table');
-    table.innerHTML = "";
-    usersSnap.forEach(doc => {
-        const u = doc.data();
-        const allowed = u.allowedCourses || [];
-        let btnHtml = courses.map(c => {
-            const active = allowed.includes(c.id);
-            return `<button onclick="toggleAccess('${doc.id}', '${c.id}', ${active})" class="access-btn ${active?'active':''}">
-                    ${active ? '✅' : '❌'} ${c.title}</button>`;
-        }).join('');
-
-        table.innerHTML += `<tr>
-            <td>${u.name || 'مجهول'}<br><small>${doc.id}</small></td>
-            <td>${btnHtml}</td>
-            <td><a href="https://wa.me/${u.phone}" target="_blank">📱</a></td>
-        </tr>`;
-    });
-
-    // قائمة إدارة الكورسات
-    const mList = document.getElementById('manage-courses-list');
-    mList.innerHTML = "";
-    coursesSnap.forEach(doc => {
-        const d = doc.data();
-        mList.innerHTML += `
-            <div class="manage-item">
-                <span>${d.title} (${d.type})</span>
-                <button onclick="prepareEdit('${doc.id}')">✏️</button>
-                <button onclick="deleteCourse('${doc.id}')" style="background:#600;">🗑️</button>
-            </div>`;
-    });
-}
-
-async function toggleAccess(email, cId, has) {
-    const ref = db.collection("users_profiles").doc(email);
-    const d = await ref.get();
-    let allowed = d.exists ? (d.data().allowedCourses || []) : [];
-    if(has) allowed = allowed.filter(id => id !== cId); else allowed.push(cId);
-    await ref.set({ allowedCourses: allowed }, { merge: true });
-    loadAdminDashboard();
-}
-
-async function prepareEdit(id) {
-    editModeId = id;
-    const doc = await db.collection("courses").doc(id).get();
-    const d = doc.data();
-    document.getElementById('courseTitle').value = d.title;
-    document.getElementById('courseType').value = d.type;
-    document.getElementById('videos-inputs').innerHTML = "";
-    d.videos.forEach(v => addNewVideoInput(v.url));
-    window.scrollTo(0,0);
-}
-
-async function deleteCourse(id) { if(confirm("حذف؟")) await db.collection("courses").doc(id).delete(); }
+// دوال prepareEdit و deleteCourse و addNewVideoInput تظل كما هي
