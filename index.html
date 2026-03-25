@@ -13,26 +13,24 @@
 </head>
 <body>
     <nav>
-        <div class="logo-container">
-            <span class="logo">Sudo Academy</span>
-            <span class="owner-tag">By: Marwan Swedan</span>
-        </div>
-        <div id="auth-section">
-            <button id="loginBtn" class="btn-main" onclick="loginWithGoogle()">تسجيل دخول بجوجل</button>
-            <span id="userDisplayName"></span>
-            <a href="admin.html" id="adminLink" style="display:none; color:var(--primary); margin-right:15px; text-decoration:none; font-weight:bold;">لوحة التحكم</a>
-        </div>
-    </nav>
+    <div class="logo-container" onclick="location.reload()">
+        <span style="font-family:'Orbitron'; color:var(--primary); font-size:1.5rem;">SUDO</span>
+    </div>
+    <div id="auth-section">
+        <button id="loginBtn" class="btn-main" onclick="loginWithGoogle()">دخول المحاربين 🛡️</button>
+        <span id="userDisplayName" style="color:var(--neon-blue); font-weight:bold; margin-left:15px;"></span>
+        <a href="admin.html" id="adminLink" style="display:none; color:white; text-decoration:none; border:1px solid var(--primary); padding:5px 12px; border-radius:8px;">لوحة التحكم</a>
+    </div>
+</nav>
 
-    <header class="hero" data-aos="zoom-in">
-        <h1 class="neon-text">MARWAN SWEDAN</h1>
-        <p>مرحباً بك في أكاديمية Sudo لعلوم التحقيق الجنائي الرقمي والسيبراني 🛡️</p>
-    </header>
+<header class="hero">
+    <h1 class="neon-text">MARWAN SWEDAN</h1>
+  <p>مرحباً بك في اكاديمية SUDO للامن السيبراني والتحقيق الجنائي الرقمي</p>
+</header>
 
-    <div class="container">
-        <h2 data-aos="fade-left">الكورسات المتاحة</h2>
-        <div id="courses-grid" class="grid">
-            </div>
+<div class="container">
+    <div id="courses-grid" class="courses-grid"></div>
+</div>
     </div>
 
     <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
