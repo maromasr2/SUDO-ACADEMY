@@ -17,10 +17,14 @@
         <span style="font-family:'Orbitron'; color:var(--primary); font-size:1.5rem;">SUDO</span>
     </div>
     <div id="auth-section">
-        <button id="loginBtn" class="btn-main" onclick="loginWithGoogle()">دخول المحاربين 🛡️</button>
-        <span id="userDisplayName" style="color:var(--neon-blue); font-weight:bold; margin-left:15px;"></span>
-        <a href="admin.html" id="adminLink" style="display:none; color:white; text-decoration:none; border:1px solid var(--primary); padding:5px 12px; border-radius:8px;">لوحة التحكم</a>
+    <button id="loginBtn" class="btn-main" onclick="loginWithGoogle()">دخول المحاربين 🛡️</button>
+    
+    <div id="user-info" style="display:none; align-items:center; gap:15px;">
+        <span id="userDisplayName" style="color:var(--neon-blue); font-weight:bold; cursor:pointer;" onclick="window.location.href='profile.html'"></span>
+        <button onclick="logout()" style="background:#cc0000; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-family:'Cairo'; font-size:12px;">تسجيل الخروج</button>
+        <a href="admin.html" id="adminLink" style="display:none; color:white; border:1px solid var(--primary); padding:5px 12px; border-radius:8px; text-decoration:none; font-size:13px;">لوحة التحكم</a>
     </div>
+</div>
 </nav>
 
 <header class="hero" data-aos="zoom-in">
