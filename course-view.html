@@ -2,31 +2,47 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>قاعة المحاضرات | Sudo Academy</title>
     <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <script src="https://www.youtube.com/iframe_api"></script>
 </head>
 <body style="background:var(--bg); color:white;">
-    <nav style="padding:15px; display:flex; justify-content:space-between; background:#000;">
-        <a href="index.html" style="color:var(--primary); text-decoration:none;">← عودة</a>
-        <span id="course-title-display"></span>
+
+    <nav style="padding:15px; display:flex; justify-content:space-between; align-items:center; background:#000; border-bottom:1px solid #222;">
+        <a href="index.html" style="color:var(--primary); text-decoration:none; font-weight:bold;">← العودة للرئيسية</a>
+        <span id="course-title-display" style="font-family:'Orbitron'; color:var(--neon-blue); font-size:1.2rem;">SUDO COURSE</span>
     </nav>
-    <div class="admin-grid" style="grid-template-columns: 3fr 1fr; padding:20px; gap:20px;">
-        <div class="admin-card">
-            <div id="player"></div>
-            <div style="height:5px; background:#222; margin-top:15px; border-radius:3px;">
-                <div id="progress-fill" style="height:100%; background:var(--primary); width:0%;"></div>
+
+    <div class="admin-grid" style="grid-template-columns: 3fr 1fr; padding:20px; gap:20px; display: grid;">
+        <div class="admin-card" style="background:var(--card); padding:20px; border-radius:15px;">
+            <div id="player-container" style="position:relative; width:100%; padding-top:56.25%;">
+                <div id="player" style="position:absolute; top:0; left:0; width:100%; height:100%; border-radius:10px;"></div>
             </div>
-            <p id="v-title" style="margin-top:15px; font-weight:bold;"></p>
+            
+            <div style="height:6px; background:#222; margin-top:20px; border-radius:10px; overflow:hidden;">
+                <div id="progress-fill" style="height:100%; background:var(--primary); width:0%; transition: 0.3s;"></div>
+            </div>
+
+            <div id="video-info" style="margin-top:25px; text-align:right;">
+                <h2 id="current-v-title" style="color:var(--primary); margin:0;"></h2>
+                <hr style="border:0; border-top:1px solid #333; margin:15px 0;">
+                <p style="color:#888; font-size:0.9rem; margin-bottom:5px;">وصف الدرس:</p>
+                <div id="current-v-desc" style="background:#0b0e11; padding:20px; border-radius:10px; color:#ccc; white-space: pre-wrap; line-height:1.6; border:1px solid #222;"></div>
+            </div>
         </div>
-        <div class="admin-card">
-            <h3>📂 قائمة الدروس</h3>
-            <div id="video-list"></div>
+
+        <div class="admin-card" style="background:var(--card); padding:20px; border-radius:15px;">
+            <h3 style="margin-top:0; border-bottom:1px solid #333; padding-bottom:10px;">📂 دروس المهمة</h3>
+            <div id="video-list" style="max-height: 70vh; overflow-y: auto;">
+                </div>
         </div>
     </div>
+
     <script src="config.js"></script>
     <script>
         const urlParams = new URLSearchParams(window.location.search);
@@ -34,55 +50,146 @@
         let player, currentVidIndex, vids = [];
         let userEmail;
 
+        // التحقق من الدخول والصلاحية (الطرد الفوري مدمج في app.js ولكن نؤكده هنا)
         firebase.auth().onAuthStateChanged(user => {
-            if(!user) window.location.href = 'index.html';
+            if(!user) {
+                window.location.href = 'index.html';
+                return;
+            }
             userEmail = user.email;
-            loadCourse();
+            loadCourseData();
         });
 
-        async function loadCourse() {
+        async function loadCourseData() {
             const doc = await db.collection("courses").doc(courseId).get();
-            const data = doc.data(); vids = data.videos;
+            if(!doc.exists) {
+                alert("الكورس غير موجود!");
+                window.location.href = 'index.html';
+                return;
+            }
+            const data = doc.data();
+            vids = data.videos;
             document.getElementById('course-title-display').innerText = data.title;
-            renderList(); playVid(0);
+            
+            renderVideoList();
+            // تشغيل أول فيديو تلقائياً
+            playVid(0);
         }
 
-        async function renderList() {
-            const list = document.getElementById('video-list'); list.innerHTML = "";
-            for(let i=0; i<vids.length; i++) {
-                const prog = await db.collection("user_progress").doc(`${userEmail}_${courseId}_${i}`).get();
-                const done = prog.exists && prog.data().done;
-                list.innerHTML += `<div class="video-item ${done?'done':''}" onclick="playVid(${i})">${done?'✅':'🎥'} ${vids[i].title}</div>`;
+        async function renderVideoList() {
+            const listDiv = document.getElementById('video-list');
+            listDiv.innerHTML = "<p style='color:#666; font-size:12px;'>جاري تحميل التقدم...</p>";
+            
+            let html = "";
+            for(let i=0; i < vids.length; i++) {
+                // فحص هل الطالب شاهد الدرس (80%) من قبل
+                const progDoc = await db.collection("user_progress").doc(`${userEmail}_${courseId}_${i}`).get();
+                const isDone = progDoc.exists && progDoc.data().done;
+                
+                html += `
+                    <div class="video-item ${isDone ? 'done' : ''}" id="vid-item-${i}" onclick="playVid(${i})" 
+                         style="padding:15px; margin-bottom:10px; background:#0b0e11; border-radius:8px; cursor:pointer; border-right:4px solid ${isDone ? 'var(--primary)' : '#333'}; transition:0.3s;">
+                        <span style="font-size:0.8rem; color:${isDone ? 'var(--primary)' : '#666'};">${isDone ? '✅ مكتمل' : '🎥 درس ' + (i+1)}</span>
+                        <div style="font-weight:bold; margin-top:5px;">${vids[i].title}</div>
+                    </div>
+                `;
             }
+            listDiv.innerHTML = html;
         }
 
         function playVid(index) {
             currentVidIndex = index;
-            const vId = vids[index].url.split('/').pop();
-            if(player) player.loadVideoById(vId);
-            else {
+            const videoData = vids[index];
+            
+            // استخراج الـ ID من رابط اليوتيوب (سواء كان embed أو watch)
+            const videoId = videoData.url.split('/').pop().split('?')[0];
+
+            if(player && typeof player.loadVideoById === "function") {
+                player.loadVideoById(videoId);
+            } else {
+                // تهيئة المشغل لأول مرة
                 player = new YT.Player('player', {
-                    height: '450', width: '100%', videoId: vId,
+                    height: '100%',
+                    width: '100%',
+                    videoId: videoId,
+                    playerVars: { 'autoplay': 1, 'rel': 0 },
                     events: { 'onStateChange': onPlayerStateChange }
                 });
             }
-            document.getElementById('v-title').innerText = vids[index].title;
-            setInterval(updateProgress, 1000);
+
+            // تحديث العناوين والوصف
+            document.getElementById('current-v-title').innerText = videoData.title;
+            document.getElementById('current-v-desc').innerText = videoData.description || "لا يوجد وصف متوفر لهذا الدرس.";
+            
+            // تحديث شكل القائمة (Highlight)
+            document.querySelectorAll('.video-item').forEach(el => el.style.background = "#0b0e11");
+            document.getElementById(`vid-item-${index}`).style.background = "#1a1d21";
+
+            // بدء مراقبة التقدم
+            startProgressTracker();
         }
 
-        function updateProgress() {
-            if(player && player.getDuration) {
-                const p = (player.getCurrentTime() / player.getDuration()) * 100;
-                document.getElementById('progress-fill').style.width = p + "%";
-                if(p >= 80) markAsDone();
+        let trackerInterval;
+        function startProgressTracker() {
+            if(trackerInterval) clearInterval(trackerInterval);
+            trackerInterval = setInterval(() => {
+                if(player && player.getDuration) {
+                    const currentTime = player.getCurrentTime();
+                    const duration = player.getDuration();
+                    if(duration > 0) {
+                        const percent = (currentTime / duration) * 100;
+                        document.getElementById('progress-fill').style.width = percent + "%";
+                        
+                        // لو وصل لـ 80% احفظ التقدم
+                        if(percent >= 80) {
+                            markLessonAsDone(currentVidIndex);
+                        }
+                    }
+                }
+            }, 2000);
+        }
+
+        async function markLessonAsDone(index) {
+            const docId = `${userEmail}_${courseId}_${index}`;
+            const ref = db.collection("user_progress").doc(docId);
+            const check = await ref.get();
+            
+            if(!check.exists || !check.data().done) {
+                await ref.set({
+                    email: userEmail,
+                    courseId: courseId,
+                    videoIndex: index,
+                    done: true,
+                    timestamp: new Date()
+                });
+                // تحديث العلامة الخضراء في القائمة بدون إعادة تحميل الصفحة بالكامل
+                const item = document.getElementById(`vid-item-${index}`);
+                if(item) {
+                    item.style.borderRightColor = "var(--primary)";
+                    item.querySelector('span').innerHTML = "✅ مكتمل";
+                }
             }
         }
 
-        async function markAsDone() {
-            await db.collection("user_progress").doc(`${userEmail}_${courseId}_${currentVidIndex}`).set({ done: true }, { merge: true });
-            renderList();
+        function onPlayerStateChange(event) {
+            // يمكن إضافة منطق هنا عند توقف الفيديو أو انتهائه
         }
-        function onPlayerStateChange(event) {}
     </script>
+
+    <style>
+        .video-item:hover {
+            background: #1e2227 !important;
+            transform: translateX(-5px);
+        }
+        .video-item.done {
+            border-right: 4px solid var(--primary) !important;
+        }
+        /* تصميم متجاوب للموبايل */
+        @media (max-width: 900px) {
+            .admin-grid {
+                grid-template-columns: 1fr !important;
+            }
+        }
+    </style>
 </body>
 </html>
