@@ -3,45 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sudo Academy | Marwan Swedan</title>
+    <title>Sudo Academy</title>
     <link rel="stylesheet" href="style.css">
-    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;700&family=Orbitron:wght@700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
 </head>
 <body>
-    <nav>
-    <div class="logo-container" onclick="location.reload()">
-        <span style="font-family:'Orbitron'; color:var(--primary); font-size:1.5rem;">SUDO</span>
-    </div>
-    <div id="auth-section">
-    <button id="loginBtn" class="btn-main" onclick="loginWithGoogle()">دخول المحاربين 🛡️</button>
-    
-    <div id="user-info" style="display:none; align-items:center; gap:15px;">
-        <span id="userDisplayName" style="color:var(--neon-blue); font-weight:bold; cursor:pointer;" onclick="window.location.href='profile.html'"></span>
-        <button onclick="logout()" style="background:#cc0000; color:white; border:none; padding:5px 10px; border-radius:5px; cursor:pointer; font-family:'Cairo'; font-size:12px;">تسجيل الخروج</button>
-        <a href="admin.html" id="adminLink" style="display:none; color:white; border:1px solid var(--primary); padding:5px 12px; border-radius:8px; text-decoration:none; font-size:13px;">لوحة التحكم</a>
-    </div>
-</div>
-</nav>
 
-<header class="hero" data-aos="zoom-in">
-    <a href="https://www.linkedin.com/in/marwan-swedan/" target="_blank" style="text-decoration: none;">
-        <h1 class="neon-text">MARWAN SWEDAN</h1>
-    </a>
-    <p>مرحباً بك في أكاديمية SUDO للتحقيق الجنائي الرقمي والأمن السيبراني 🛡️</p>
-</header>
+    <nav style="display: flex; justify-content: space-between; align-items: center; padding: 15px 5%; background: rgba(0,0,0,0.9); border-bottom: 2px solid var(--primary); position: sticky; top: 0; z-index: 10000;">
+        <div class="logo-container" onclick="location.reload()" style="cursor:pointer;">
+            <span class="logo" style="font-family:'Orbitron'; color:var(--primary); font-size:1.5rem; letter-spacing:2px;">SUDO ACADEMY</span>
+        </div>
+        
+        <div id="auth-section" style="display: flex; align-items: center; gap: 15px;">
+            <button id="loginBtn" class="btn-main" onclick="window.loginWithGoogle()" style="display:none;">دخول المحاربين 🛡️</button>
+            
+            <div id="user-info" style="display:none; align-items:center; gap:15px;">
+                <span id="userDisplayName" style="color:var(--neon-blue); font-weight:bold; cursor:pointer; font-family:'Cairo';" onclick="window.location.href='profile.html'"></span>
+                <button onclick="window.logout()" style="background:#cc0000; color:white; border:none; padding:5px 12px; border-radius:5px; cursor:pointer; font-family:'Cairo'; font-size:12px;">خروج</button>
+                <a href="admin.html" id="adminLink" style="display:none; color:var(--primary); border:1px solid var(--primary); padding:5px 12px; border-radius:8px; text-decoration:none; font-size:13px; font-family:'Orbitron';">VAULT-74</a>
+            </div>
+        </div>
+    </nav>
 
-<div class="container">
-    <div id="courses-grid" class="courses-grid"></div>
-</div>
+    <header class="hero" style="text-align: center; padding: 80px 20px;">
+        <a href="https://www.linkedin.com/in/marwan-sweidan-0870b2278" target="_blank" style="text-decoration: none;">
+            <h1 class="neon-text" style="font-size: 4rem; margin-bottom: 10px;">MARWAN SWEDAN</h1>
+        </a>
+        <p style="font-size: 1.2rem; color: #aaa;">مرحباً بك في أكاديمية SUDO للتحقيق الجنائي الرقمي والأمن السيبراني 🛡️</p>
+    </header>
+
+    <div class="container">
+        <div id="courses-grid" class="courses-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 25px; padding: 20px;">
+            </div>
     </div>
 
-    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="config.js"></script>
     <script src="app.js"></script>
-    <script>AOS.init({ duration: 800, once: true });</script>
 </body>
 </html>
